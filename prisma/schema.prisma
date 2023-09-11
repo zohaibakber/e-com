@@ -3,17 +3,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url  	= env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
-model Store {
-  id        String   @id @default(cuid())
-  name      String
-  userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -42,14 +36,34 @@ model Session {
 }
 
 model User {
-  id                String         @id @default(cuid())
-  name              String?
-  email             String?        @unique
-  emailVerified     DateTime?
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
 
   username String? @unique
 
-  image       String?
-  accounts    Account[]
-  sessions    Session[]
+  image    String?
+  accounts Account[]
+  sessions Session[]
+}
+
+model Store {
+  id         String      @id @default(cuid())
+  name       String
+  userId     String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  Billboards Billboard[]
+}
+
+model Billboard {
+  id        String   @id @default(cuid())
+  userId    String
+  store     Store    @relation(fields: [storeId], references: [id])
+  storeId   String
+  label     String
+  imagUrl   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

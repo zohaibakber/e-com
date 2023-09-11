@@ -4,7 +4,7 @@ import * as z from "zod";
 import Heading from "@/components/Heading";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Store } from "@prisma/client";
+import { Billboard } from "@prisma/client";
 import { Trash } from "lucide-react";
 import { FC, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -24,21 +24,23 @@ import { useParams, useRouter } from "next/navigation";
 import { AlertModal } from "@/components/modals/alert-modal";
 import ApiAlert from "@/components/ApiAlert";
 import { useOrigin } from "@/hooks/use-origin";
+import { UploadButton } from "@/lib/uploadthing";
+import { getAuthSession } from "@/lib/auth";
 
-interface SettingFormProps {
-  initialData: Store;
+interface BillBoardFormProps {
+  initialData: Billboard | null;
+  userId: string;
 }
 
 const formSchema = z.object({
   name: z.string().nonempty({ message: "Store name is required" }),
 });
 
-type SettingFormValues = z.infer<typeof formSchema>;
+type BillBoardFormValues = z.infer<typeof formSchema>;
 
-const SettingForm: FC<SettingFormProps> = ({ initialData }) => {
-  const form = useForm<SettingFormValues>({
+const BillBoardForm: FC<BillBoardFormProps> = ({ initialData, userId }) => {
+  const form = useForm<BillBoardFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData,
   });
 
   const params = useParams();
@@ -46,7 +48,7 @@ const SettingForm: FC<SettingFormProps> = ({ initialData }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
-  const onSubmit = async (data: SettingFormValues) => {
+  const onSubmit = async (data: BillBoardFormValues) => {
     try {
       setLoading(true);
       await axios.patch(`/api/stores/${params.storeId}`, data);
@@ -96,17 +98,19 @@ const SettingForm: FC<SettingFormProps> = ({ initialData }) => {
         onConfirm={onDelete}
       />
       <div className="flex items-center justify-between">
-        <Heading title="Settings" description="Manage store preferance" />
-        <Button
-          variant={"destructive"}
-          size={"icon"}
-          disabled={loading}
-          onClick={() => {
-            setOpen(true);
-          }}
-        >
-          <Trash className="w-4 h-4" />
-        </Button>
+        <Heading title="BillBoards" description="Manage billboards here" />
+        {initialData && (
+          <Button
+            variant={"destructive"}
+            size={"icon"}
+            disabled={loading}
+            onClick={() => {
+              setOpen(true);
+            }}
+          >
+            <Trash className="w-4 h-4" />
+          </Button>
+        )}
       </div>
       <Separator />
       <Form {...form}>
@@ -124,7 +128,7 @@ const SettingForm: FC<SettingFormProps> = ({ initialData }) => {
                   <FormControl>
                     <Input
                       disabled={loading}
-                      placeholder="Store name"
+                      placeholder="Billboard name"
                       {...field}
                     />
                   </FormControl>
@@ -139,13 +143,28 @@ const SettingForm: FC<SettingFormProps> = ({ initialData }) => {
         </form>
       </Form>
       <Separator />
-      <ApiAlert
-        title="NEXT_PUBLIC_API_URL  "
-        description={`${origin}/api/${params.storeId}`}
-        variant="public"
+      <UploadButton
+        className="border-2 border-gray-300 rounded-md p-2"
+        endpoint="imageUploader"
+        key={userId}
+        onClientUploadComplete={() => {
+          toast({
+            title: "Success",
+            description: "Image uploaded successfully",
+          });
+          axios.patch(`/api/billboards/${params.billboardId}`);
+        }}
+        onUploadError={(error) => {
+          toast({
+            title: "Error",
+            description: "Something went wrong uploading the image",
+            variant: "destructive",
+          });
+          console.error(error);
+        }}
       />
     </>
   );
 };
 
-export default SettingForm;
+export default BillBoardForm;

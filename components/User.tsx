@@ -1,11 +1,21 @@
 "use client";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { Button } from "./ui/button";
+import { useState } from "react";
+import { LoadingButton } from "./ui/loading-button";
 
 const User = () => {
+  const [loading, setLoading] = useState<boolean>(false);
   return (
     <div>
-      <Button onClick={() => signOut()}>Sign out</Button>
+      <LoadingButton
+        action={() => {
+          signOut();
+        }}
+        loading={loading}
+        setLoading={setLoading}
+      >
+        Signout
+      </LoadingButton>
     </div>
   );
 };
